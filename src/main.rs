@@ -1,11 +1,32 @@
-use tokio::net::TcpListener;
+use std::sync::Arc;
+
+use api::DailyEnemy;
+use db::Database;
+use tokio::sync::RwLock;
+use scheduler::Scheduler;
+use shuttle_runtime::CustomError;
+use sqlx::PgPool;
 
 mod api;
+mod db;
+mod scheduler;
 
-#[tokio::main]
-async fn main() {
-    let listener = TcpListener::bind("0.0.0.0:3010")
+#[shuttle_runtime::main]
+async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
+    sqlx::migrate!()
+        .run(&pool)
         .await
-        .expect("can't listen");
-    axum::serve(listener, api::make_router()).await.unwrap();
+        .map_err(CustomError::new)?;
+
+    let db = Arc::new(RwLock::new(Database::new(pool)));
+    let daily = Arc::new(RwLock::new(DailyEnemy::get_dummy()));
+    let scheduler = Arc::new(RwLock::new(Scheduler::new(db.clone(), daily.clone())));
+
+    let runner = scheduler.clone();
+    tokio::spawn(async move {
+        let mut scheduler = runner.write().await;
+        scheduler.execute().await;
+    });
+
+    Ok(api::make_router(daily.clone()).into())
 }

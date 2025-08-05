@@ -1,3 +1,5 @@
 result/
 .direnv/
-target/
+/target
+.shuttle*
+Secrets*.toml
