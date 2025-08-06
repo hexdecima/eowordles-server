@@ -8,13 +8,14 @@ use crate::{api::{get_random_enemy, DailyEnemy}, db::Database};
 pub struct Scheduler {
     pub db: Arc<RwLock<Database>>,
     pub daily_enemy: Arc<RwLock<DailyEnemy>>,
+    pub yesterdays: Arc<RwLock<Option<Enemy>>>
 }
 
 // TODO: Track time accurately.
 impl Scheduler {
-    pub fn new(db: Arc<RwLock<Database>>, daily_enemy: Arc<RwLock<DailyEnemy>>) -> Self {
+    pub fn new(db: Arc<RwLock<Database>>, daily_enemy: Arc<RwLock<DailyEnemy>>, yesterdays: Arc<RwLock<Option<Enemy>>>) -> Self {
         Self {
-            db, daily_enemy
+            db, daily_enemy, yesterdays
         }
     }
     /// Runs this scheduler in an infinite loop. Should be done in a separate thread.
@@ -41,11 +42,21 @@ impl Scheduler {
             day: today.clone()
         };
         println!("The enemy for today ({today}) is {}!", enemy.name);
+
+        if let Some(enemy) = self.load_for_yesterday().await {
+            let mut yesterdays = self.yesterdays.write().await;
+            *yesterdays = Some(enemy);
+        }
     }
     pub async fn load_for_today(&self) -> Option<Enemy> {
         let today = Utc::now().date_naive();
         let db = self.db.read().await;
         db.get_for_date(today).await
+    }
+    pub async fn load_for_yesterday(&self) -> Option<Enemy> {
+        let yesterday = Utc::now().date_naive() - Days::new(1);
+        let db = self.db.read().await;
+        db.get_for_date(yesterday).await
     }
     /// Changes the daily enemy, if today is a new day.
     /// Does nothing if not.
@@ -67,7 +78,11 @@ impl Scheduler {
                     eprintln!("Nothing defined for day {today:?}")
                 },
             }
-        } else { println!("Still the same day, nothing to do."); }
+            if let Some(enemy) = self.load_for_yesterday().await {
+                let mut yesterdays = self.yesterdays.write().await;
+                *yesterdays = Some(enemy);
+            }
+    } else { println!("Still the same day, nothing to do."); }
     }
     /// Populates the database history for the next week, including today.
     /// Does nothing for days that are already populated.

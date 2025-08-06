@@ -21,16 +21,22 @@ impl DailyEnemy {
 
 pub struct ApiState {
     pub enemies: Box<[Enemy]>,
-    pub daily_enemy: Arc<RwLock<DailyEnemy>>
+    pub daily_enemy: Arc<RwLock<DailyEnemy>>,
+    pub yesterdays: Arc<RwLock<Option<Enemy>>>
 }
 
-pub fn make_router(daily_enemy: Arc<RwLock<DailyEnemy>>) -> Router {
+pub fn make_router(daily_enemy: Arc<RwLock<DailyEnemy>>, yesterdays: Arc<RwLock<Option<Enemy>>>) -> Router {
     Router::new()
         .route("/daily/diff/{id}", get(daily_diff))
+        .route("/yesterday", get(get_yesterdays))
         .layer(CorsLayer::new().allow_methods([Method::GET]).allow_origin(Any))
         .with_state(Arc::new(ApiState { 
-            enemies: list_enemies(), daily_enemy
+            enemies: list_enemies(), daily_enemy, yesterdays
         }))
+}
+
+async fn get_yesterdays(State(state): State<Arc<ApiState>>) -> Json<Option<Enemy>> {
+    Json((*state.yesterdays.read().await).clone())
 }
 
 async fn daily_diff(
