@@ -19,13 +19,13 @@ impl Scheduler {
     }
     /// Runs this scheduler in an infinite loop. Should be done in a separate thread.
     pub async fn execute(&mut self) -> ! {
-        self.populate_month().await;
+        self.populate_week().await;
         self.init().await;
 
         loop {
-            self.change_daily().await;
-            self.populate_month().await;
             tokio::time::sleep(Duration::from_secs(60 * 60)).await;
+            self.change_daily().await;
+            self.populate_week().await;
         }
     }
     pub async fn init(&self) {
@@ -69,11 +69,11 @@ impl Scheduler {
             }
         } else { println!("Still the same day, nothing to do."); }
     }
-    /// Populates the database history for the next 30 days, including today.
+    /// Populates the database history for the next week, including today.
     /// Does nothing for days that are already populated.
-    async fn populate_month(&mut self) {
+    async fn populate_week(&mut self) {
         let mut today = Utc::now().date_naive();
-        let end = today + Days::new(30);
+        let end = today + Days::new(7);
 
         let db = self.db.read().await;
         while today != end {
