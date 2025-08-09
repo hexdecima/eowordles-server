@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use chrono::NaiveDate;
-use eowordle_lib::{list_enemies, Enemy};
+use eowordle_lib::{enemies::list_enemies, Enemy};
 use sqlx::{prelude::FromRow, PgPool};
 use tokio::sync::RwLock;
 

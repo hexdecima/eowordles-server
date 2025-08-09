@@ -6,7 +6,7 @@ use rand::Rng;
 use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
 
-use eowordle_lib::{list_enemies, Enemy, EnemyDiff};
+use eowordle_lib::{enemies::list_enemies, Enemy, EnemyDiff};
 
 pub struct DailyEnemy {
     pub enemy: Option<Enemy>,
