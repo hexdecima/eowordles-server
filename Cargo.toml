@@ -19,7 +19,7 @@ tower-http = { version = "0.6.6", features = ["cors"] }
 
 [dependencies.eowordle-lib]
 git = "https://github.com/hexdecima/eowordles-lib"
-rev = "2f032e9ac299b5420afff115a05162afffc8645a"
+rev = "1e2a4bddb0ebab7506021b5ba6031971826ad06c"
 
 [profile.release]
 lto = true

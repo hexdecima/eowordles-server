@@ -1,5 +1,5 @@
 use chrono::{Days, Utc};
-use eowordle_lib::Enemy;
+use eowordle_lib::prelude::Enemy;
 use std::{sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 

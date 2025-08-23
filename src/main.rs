@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use api::DailyEnemy;
 use db::Database;
-use eowordle_lib::Enemy;
+use eowordle_lib::prelude::Enemy;
 use tokio::sync::RwLock;
 use scheduler::Scheduler;
 use shuttle_runtime::CustomError;
